@@ -1,0 +1,27 @@
+{
+  "name": "claude-code-game-hub",
+  "version": "0.1.0",
+  "description": "Play games in your terminal while Claude Code works",
+  "type": "module",
+  "bin": {
+    "game-hub": "./bin/game-hub.js"
+  },
+  "files": ["bin/", "dist/", "scripts/"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node bin/game-hub.js",
+    "postinstall": "node scripts/postinstall.mjs",
+    "preuninstall": "node scripts/preuninstall.mjs"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

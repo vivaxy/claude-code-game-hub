@@ -1,0 +1,11 @@
+{
+  "name": "claude-code-game-hub",
+  "owner": { "name": "vivaxy" },
+  "plugins": [
+    {
+      "name": "game-hub",
+      "source": "./plugin",
+      "description": "Hooks that drive the game-hub PTY wrapper"
+    }
+  ]
+}
