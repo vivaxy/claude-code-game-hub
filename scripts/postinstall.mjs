@@ -28,17 +28,60 @@ try {
   process.exit(1);
 }
 
-try {
-  execFileSync('claude', ['plugin', 'marketplace', 'add', 'vivaxy/claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
-} catch {
-  // already registered or network error — non-fatal
+function isMarketplaceRegistered() {
+  try {
+    const out = execFileSync('claude', ['plugin', 'marketplace', 'list'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return /^\s*❯\s+claude-code-game-hub\s*$/m.test(out);
+  } catch {
+    return false;
+  }
 }
 
-try {
-  execFileSync('claude', ['plugin', 'install', 'game-hub@claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
-  console.log('game-hub: Claude plugin registered successfully.');
-} catch {
-  console.log(
-    'game-hub: plugin registration failed (already installed, or check `claude plugin list`).'
-  );
+function isPluginInstalled() {
+  try {
+    const out = execFileSync('claude', ['plugin', 'list'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return /^\s*❯\s+game-hub@claude-code-game-hub\s*$/m.test(out);
+  } catch {
+    return false;
+  }
 }
+
+const marketplaceOk = isMarketplaceRegistered();
+const pluginOk = isPluginInstalled();
+
+if (marketplaceOk && pluginOk) {
+  console.log('game-hub: Claude plugin already registered, skipping.');
+  process.exit(0);
+}
+
+if (!marketplaceOk) {
+  try {
+    execFileSync('claude', ['plugin', 'marketplace', 'add', 'vivaxy/claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
+  } catch {
+    console.error(
+      'game-hub: marketplace registration failed.\n' +
+      '  Retry manually: claude plugin marketplace add vivaxy/claude-code-game-hub'
+    );
+    process.exit(1);
+  }
+}
+
+if (!pluginOk) {
+  try {
+    execFileSync('claude', ['plugin', 'install', 'game-hub@claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
+  } catch {
+    console.error(
+      'game-hub: plugin install failed.\n' +
+      '  Retry manually: claude plugin install game-hub@claude-code-game-hub'
+    );
+    process.exit(1);
+  }
+}
+
+console.log('game-hub: Claude plugin registered successfully.');
