@@ -4,6 +4,7 @@ import type { GameManifest, InstalledGame } from './config.js';
 
 export type HookEventName = 'prompt_submit' | 'stop' | 'notification' | 'subagent_stop';
 export type ControlAction = 'enable' | 'disable';
+export type InstallBody = { packageManager: string; spec: string };
 
 export const DEFAULT_PORT = 41731;
 
@@ -29,6 +30,7 @@ export type RegisterBody =
 
 export interface GameService {
   list(): { currentGameId: string; games: GameDescriptor[] };
+  install(body: InstallBody): { manifest: GameManifest };
   register(body: RegisterBody): { manifest: GameManifest };
   unregister(id: string): void;
   switchTo(id: string): void;
@@ -90,6 +92,22 @@ export function createHookServer(
               .end(JSON.stringify(data));
           } catch (err) {
             res.writeHead(500).end(JSON.stringify({ error: String(err) }));
+          }
+          return;
+        }
+
+        if (url === '/games/install') {
+          try {
+            const parsed = JSON.parse(body) as InstallBody;
+            const result = gameService.install(parsed);
+            res
+              .writeHead(200, { 'Content-Type': 'application/json' })
+              .end(JSON.stringify({ ok: true, manifest: result.manifest }));
+          } catch (err) {
+            const status = (err as { status?: number }).status ?? 400;
+            res
+              .writeHead(status, { 'Content-Type': 'application/json' })
+              .end(JSON.stringify({ error: String(err instanceof Error ? err.message : err) }));
           }
           return;
         }

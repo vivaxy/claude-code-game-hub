@@ -17,8 +17,9 @@ export type GameManifest = {
 export type InstalledGame = {
   id: string;
   manifest: GameManifest;
-  npmPackage?: string;
+  npmPackage?: string;  // resolved package/formula name used for uninstall
   packagePath?: string;
+  packageManager?: string;  // e.g. 'npm', 'pnpm', 'yarn', 'brew', 'cargo'
 };
 
 export type Config = {

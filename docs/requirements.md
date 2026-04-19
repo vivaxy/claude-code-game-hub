@@ -18,7 +18,10 @@
 
 ### Game management
 - A built-in Snake game ships with the package.
-- Users can install additional games as npm packages (external game plugins).
+- Users can install additional games via `/game-hub:install <package-manager> <spec>`. Supported package managers:
+  - Node PMs (npm, pnpm, yarn, bun): install to global node_modules and read the `game-hub` manifest from `package.json`. Any PM-compatible spec is accepted (registry name, `github:user/repo`, git URL, local path, tarball).
+  - System PMs (brew, cargo, pip, pip3, or any other): install the binary and auto-register it as a subprocess game using the package name as the command.
+- Game CLIs already installed on PATH (by any means) can be registered with `/game-hub:register <id> <command>`.
 - Users can switch the active game without restarting game-hub.
 - The active game ID is persisted in config across restarts.
 

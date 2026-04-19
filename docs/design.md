@@ -47,9 +47,9 @@ export interface Game {
 2. Add the game id and instantiation logic to `src/games/registry.ts` (`instantiateGame` and `listAllGames`).
 3. The game is automatically available for `/game-hub:switch`.
 
-### Option B — External npm plugin (subprocess)
+### Option B — External plugin (subprocess)
 
-Publish an npm package with a `"game-hub"` field in `package.json`:
+Publish a package with a `"game-hub"` field in `package.json`:
 
 ```json
 {
@@ -64,7 +64,14 @@ Publish an npm package with a `"game-hub"` field in `package.json`:
 }
 ```
 
-Users install it with `/game-hub:install my-game-package`. The registry wraps it in `SubprocessGame` (`src/games/subprocess.ts`) which manages the child process and proxies PTY I/O.
+Users install it with `/game-hub:install <pm> <spec>`:
+
+- **Node PMs** (npm, pnpm, yarn, bun): the hub takes a before/after snapshot of the PM's global `node_modules`, runs the install, then finds the newly added package whose `package.json` has a `game-hub` field. The `spec` is anything the PM accepts (registry name, `github:user/repo`, git URL, local path, tarball). On failure the hub rolls back via the PM's uninstall command.
+- **System PMs** (brew, cargo, pip, and any other): the hub runs `<pm> install <spec>` and auto-registers the binary using the spec's last path component as the command, id, and name. If the actual binary name differs, the user can correct it with `/game-hub:uninstall <id>` then `/game-hub:register <id> <real-command>`.
+
+The uninstall command (`/game-hub:uninstall`) uses the `packageManager` stored in config to run the correct PM's uninstall command. The registry wraps the result in `SubprocessGame` (`src/games/subprocess.ts`) which manages the child process and proxies PTY I/O.
+
+For games already on PATH (installed by any means), use `/game-hub:register <id> <command>` — the hub does not need to know how the binary was installed.
 
 ## Key Files
 
