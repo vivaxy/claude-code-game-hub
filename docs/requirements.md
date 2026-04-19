@@ -14,7 +14,7 @@
 ### Hook integration
 - Hooks POST events to `http://127.0.0.1:${GAME_HUB_PORT}/event`.
 - Hooks must be no-ops when game-hub is not running (`curl --connect-timeout 0.1` fails silently).
-- Hooks are registered automatically on `npm install -g` and removed on `npm uninstall -g`.
+- Hooks are registered automatically on `npm install -g`, refreshed in place if already installed, and removed on `npm uninstall -g`.
 
 ### Game management
 - A built-in Snake game ships with the package.

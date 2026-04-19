@@ -22,7 +22,7 @@ Set `GAME_HUB_PORT` (default `41731`) to change the hook server port.
 
 ## Hook installation
 
-The Claude plugin is registered automatically when you run `npm install -g claude-code-game-hub`. If `claude` wasn't on PATH at install time, or you installed without `-g`, register manually once:
+The Claude plugin is registered automatically when you run `npm install -g claude-code-game-hub`. Re-running the same command refreshes the plugin to the latest GitHub HEAD (Claude Code restart required to apply). If `claude` wasn't on PATH at install time, or you installed without `-g`, register manually once:
 
 ```
 claude plugin marketplace add vivaxy/claude-code-game-hub

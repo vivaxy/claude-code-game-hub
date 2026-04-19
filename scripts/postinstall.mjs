@@ -55,12 +55,17 @@ function isPluginInstalled() {
 const marketplaceOk = isMarketplaceRegistered();
 const pluginOk = isPluginInstalled();
 
-if (marketplaceOk && pluginOk) {
-  console.log('game-hub: Claude plugin already registered, skipping.');
-  process.exit(0);
-}
-
-if (!marketplaceOk) {
+if (marketplaceOk) {
+  try {
+    execFileSync('claude', ['plugin', 'marketplace', 'update', 'claude-code-game-hub'], { stdio: 'inherit' });
+  } catch {
+    console.error(
+      'game-hub: marketplace refresh failed.\n' +
+      '  Retry manually: claude plugin marketplace update claude-code-game-hub'
+    );
+    process.exit(1);
+  }
+} else {
   try {
     execFileSync('claude', ['plugin', 'marketplace', 'add', 'vivaxy/claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
   } catch {
@@ -72,7 +77,17 @@ if (!marketplaceOk) {
   }
 }
 
-if (!pluginOk) {
+if (pluginOk) {
+  try {
+    execFileSync('claude', ['plugin', 'update', 'game-hub@claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
+  } catch {
+    console.error(
+      'game-hub: plugin update failed.\n' +
+      '  Retry manually: claude plugin update game-hub@claude-code-game-hub'
+    );
+    process.exit(1);
+  }
+} else {
   try {
     execFileSync('claude', ['plugin', 'install', 'game-hub@claude-code-game-hub', '--scope', 'user'], { stdio: 'inherit' });
   } catch {
@@ -84,4 +99,8 @@ if (!pluginOk) {
   }
 }
 
-console.log('game-hub: Claude plugin registered successfully.');
+console.log(
+  pluginOk
+    ? 'game-hub: Claude plugin refreshed (restart Claude Code to apply).'
+    : 'game-hub: Claude plugin registered successfully.'
+);
