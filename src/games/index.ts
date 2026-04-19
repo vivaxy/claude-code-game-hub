@@ -3,4 +3,5 @@ export interface Game {
   pause(): void;
   handleInput(key: string): void;
   resize(cols: number, rows: number): void;
+  dispose?(): void;
 }

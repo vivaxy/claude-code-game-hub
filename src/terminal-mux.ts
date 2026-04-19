@@ -15,6 +15,17 @@ export class TerminalMux {
     private game: Game,
   ) {}
 
+  setGame(newGame: Game): void {
+    if (this.state.mode === 'game') {
+      // transitionTo emits synchronously → enterClaudeMode() → this.game.pause()
+      // so old game is paused before we swap the reference.
+      this.state.transitionTo('claude');
+    }
+    const old = this.game;
+    this.game = newGame;
+    try { old.dispose?.(); } catch { /* best-effort */ }
+  }
+
   start(): void {
     // Forward PTY output to stdout (or buffer it in game-mode).
     this.pty.onData((data) => {
