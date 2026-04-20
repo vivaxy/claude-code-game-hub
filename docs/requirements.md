@@ -7,9 +7,18 @@
 ## Functional Requirements
 
 ### Core multiplexing
-- When a `UserPromptSubmit` hook fires → switch to game-mode (start/resume the game).
-- When a `Stop` or `Notification` hook fires → switch to claude-mode (pause the game, return the terminal to Claude Code).
+- When a `UserPromptSubmit` hook fires → switch to game-mode (start/resume the game) and update Claude status to `working`.
+- When a `Stop` hook fires → update Claude status to `idle`. The game continues running.
+- When a `Notification` hook fires → update Claude status to `waiting-for-input`. The game continues running.
+- Game-mode exit: press `q`/`Q` while in-game to pause the game and return to Claude Code. The game state is preserved and resumes on the next prompt.
+- At most one paused game exists at a time. Switching games (`/game-hub:switch`) discards the previously paused game.
 - Game-mode can be disabled at runtime via `/game-hub:disable`; re-enabled via `/game-hub:enable`. Disabled state is persisted across restarts.
+
+### Status line
+- A single-line status indicator is displayed at the top of the screen while in game-mode (row 1, above the game frame).
+- Three states: `Claude: idle`, `Claude: working`, `Claude: waiting-for-input`.
+- When status is `waiting-for-input`, the status line color-flashes (alternating yellow/red) and displays `press q to return to Claude`.
+- The status line is not painted in claude-mode.
 
 ### Hook integration
 - Hooks POST events to `http://127.0.0.1:${GAME_HUB_PORT}/event`.
@@ -24,6 +33,12 @@
 - Game CLIs already installed on PATH (by any means) can be registered with `/game-hub:register <id> <command>`.
 - Users can switch the active game without restarting game-hub.
 - The active game ID is persisted in config across restarts.
+
+### Snake restart
+- On the Snake game-over screen, press `r`/`R` to enter a restart confirmation prompt.
+- Confirm with `y`/`Y` to restart; any other key cancels and returns to the game-over screen.
+- A session-local best score is tracked and displayed in the title; it persists across restarts within the same hub process.
+- `r`/`R` during active play is ignored.
 
 ### Configuration
 - `GAME_HUB_PORT` (default `41731`) controls the HTTP hook server port.

@@ -42,10 +42,12 @@ export class Snake implements Game {
   private timer: ReturnType<typeof setInterval> | null = null;
   private termCols = process.stdout.columns || 80;
   private termRows = process.stdout.rows || 24;
+  private best = 0;
+  private confirming = false;
 
   // Canvas top-left offset (centered in terminal; clamped to ≥ 0).
   private get offCol(): number { return Math.max(0, Math.floor((this.termCols - GRID_W * 2 - 2) / 2)); }
-  private get offRow(): number { return Math.max(0, Math.floor((this.termRows - GRID_H - 4) / 2)); }
+  private get offRow(): number { return 1 + Math.max(0, Math.floor((this.termRows - GRID_H - 4) / 2)); }
 
   resume(): void {
     this.paused = false;
@@ -60,6 +62,25 @@ export class Snake implements Game {
   }
 
   handleInput(key: string): void {
+    if (this.dead && !this.confirming && (key === 'r' || key === 'R')) {
+      this.confirming = true;
+      this.renderConfirm();
+      return;
+    }
+    if (this.confirming) {
+      if (key === 'y' || key === 'Y') {
+        this.confirming = false;
+        this.resetGame();
+        this.paused = false;
+        this.render();
+        this.timer = setInterval(() => this.tick(), TICK_MS);
+      } else {
+        this.confirming = false;
+        this.renderDead();
+      }
+      return;
+    }
+    // existing arrow/p handlers below (unchanged):
     if (key === KEY_UP && this.dir !== 'down') this.nextDir = 'up';
     else if (key === KEY_DOWN && this.dir !== 'up') this.nextDir = 'down';
     else if (key === KEY_LEFT && this.dir !== 'right') this.nextDir = 'left';
@@ -108,11 +129,13 @@ export class Snake implements Game {
   }
 
   private resetGame(): void {
+    this.best = Math.max(this.best, this.score);
     this.snake = [[10, 8], [9, 8], [8, 8]];
     this.dir = 'right';
     this.nextDir = 'right';
     this.score = 0;
     this.dead = false;
+    this.confirming = false;
     this.spawnFood();
   }
 
@@ -133,7 +156,7 @@ export class Snake implements Game {
     const or = this.offRow;
 
     // Title
-    buf.push(at(oc, or), bold('  🐍 Snake — score: ' + this.score + '  '));
+    buf.push(at(oc, or), bold('  🐍 Snake — score: ' + this.score + '  best: ' + this.best + '  '));
     buf.push(at(oc, or + 1), bold('  ↑↓←→ move  p pause  q back to claude  '));
 
     // Border top
@@ -158,6 +181,13 @@ export class Snake implements Game {
     const oc = this.offCol + GRID_W - 5;
     const or = this.offRow + 3 + Math.floor(GRID_H / 2);
     process.stdout.write(at(oc, or) + red(bold(' GAME OVER ')) + at(oc, or + 1) + '  score: ' + this.score + '  ');
-    process.stdout.write(at(oc, or + 2) + '  (resuming next prompt)  ');
+    process.stdout.write(at(oc, or + 2) + yellow('  press r to restart, q to return to Claude  '));
+  }
+
+  private renderConfirm(): void {
+    const oc = this.offCol + GRID_W - 5;
+    const or = this.offRow + 3 + Math.floor(GRID_H / 2);
+    process.stdout.write(at(oc, or) + red(bold(' GAME OVER ')) + at(oc, or + 1) + '  score: ' + this.score + '  ');
+    process.stdout.write(at(oc, or + 2) + bold(yellow('  Restart? (y/n)  ')));
   }
 }

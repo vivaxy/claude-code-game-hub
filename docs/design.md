@@ -4,29 +4,51 @@
 
 ```
 hook-server  →  emitter  →  state (StateMachine)  →  terminal-mux (TerminalMux)
-                                                           ↕
-                                                       pty-claude
+                                                           ↕             ↕
+                                                       pty-claude      Header
                                                            ↕
                                                      current Game
 ```
 
-`hook-server` receives HTTP POST events from Claude Code hooks and fires them onto the `EventEmitter`. The `StateMachine` reacts to events and emits `transition` signals. `TerminalMux` listens for transitions and switches input/output routing between Claude's PTY and the active `Game`.
+`hook-server` receives HTTP POST events from Claude Code hooks and fires them onto the `EventEmitter`. The `StateMachine` reacts to events and emits `transition` and `status` signals. `TerminalMux` listens for transitions and switches input/output routing between Claude's PTY and the active `Game`. `Header` (owned by `TerminalMux`) renders the Claude-status line on row 1.
 
 ## State Machine
 
 ```mermaid
 flowchart LR
     claude([claude-mode]) -->|prompt_submit| game([game-mode])
-    game -->|stop / notification| claude
+    game -->|q / Q| claude
 ```
 
 Implemented in `src/state.ts`. On each transition a 80 ms stdin drain window is set (`drainUntil`) so in-flight keystrokes from the old mode are discarded.
+
+Claude status (`working` / `waiting-for-input` / `idle`) is tracked orthogonally to mode in `StateMachine.status`. It is updated by hook events and emits a `'status'` event, but never causes a mode transition.
+
+## Reserved Top Row
+
+Row 1 of the terminal is permanently reserved for the status line while game-hub is running.
+
+- Claude's PTY is spawned (and resized) with `rows − 1` so its TUI never plans content for row 1.
+- A DEC scroll margin (`\x1b[2;{rows}r`) is applied so Claude's scrolling stays within rows 2..rows.
+- Games receive `rows − 1` via `resize()`. Snake's `offRow` is offset by `+1` to ensure content starts at row 2.
+- The margins are re-applied on every mode switch and terminal resize.
+
+## Claude Status Indicator
+
+`src/header.ts` exports a `Header` class owned by `TerminalMux`. On each status change or mode switch, `TerminalMux.updateHeader()` is called:
+
+- In claude-mode: stops any flash timer; does not paint.
+- In game-mode: renders the current status on row 1; if status is `waiting-for-input`, starts a 500 ms flash timer alternating between yellow and red.
+
+The flash timer is torn down in `restoreTerminal()`.
 
 ## Architecture Invariants
 
 1. **No wrapper-level alt-screen toggling.** Terminals have one main + one alt buffer; they don't stack. Claude Code already lives in the alt-screen. The hub never issues `ESC[?1049h`/`l` — both modes share whatever screen Claude set up.
 
 2. **Explicit input ownership per mode.** In `claude-mode`, stdin is piped to the PTY. In `game-mode`, stdin goes to the game's key handler; nothing reaches the PTY. On each mode switch, a brief 80 ms drain window discards in-flight bytes.
+
+3. **Hook events never cause game→claude transitions.** `Stop` and `Notification` hooks update `ClaudeStatus` only. `q`/`Q` is the sole user-driven path from game-mode to claude-mode; only subprocess self-exit triggers it programmatically.
 
 ## Adding a New Game
 
@@ -88,4 +110,5 @@ For games already on PATH (installed by any means), use `/game-hub:register <id>
 | `src/games/snake.ts` | Built-in Snake implementation |
 | `src/games/subprocess.ts` | `SubprocessGame`: wraps an external game process |
 | `src/games/registry.ts` | Instantiate, list, and resolve game plugins (built-in + npm) |
+| `src/header.ts` | `Header`: renders the Claude-status line on row 1 of the terminal |
 | `plugin/hooks/hooks.json` | Claude Code plugin hook definitions |

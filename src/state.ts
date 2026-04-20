@@ -1,13 +1,25 @@
 import { EventEmitter } from 'node:events';
 
 export type Mode = 'claude' | 'game';
+export type ClaudeStatus = 'working' | 'waiting-for-input' | 'idle';
 
 export class StateMachine extends EventEmitter {
   private _mode: Mode = 'claude';
+  private _status: ClaudeStatus = 'idle';
   private drainUntil = 0;
 
   get mode(): Mode {
     return this._mode;
+  }
+
+  get status(): ClaudeStatus {
+    return this._status;
+  }
+
+  setStatus(next: ClaudeStatus): void {
+    if (this._status === next) return;
+    this._status = next;
+    this.emit('status', next);
   }
 
   transitionTo(next: Mode): void {

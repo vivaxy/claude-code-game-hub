@@ -97,7 +97,7 @@ async function main() {
 
   const termSize = () => ({
     cols: process.stdout.columns || 80,
-    rows: process.stdout.rows || 24,
+    rows: (process.stdout.rows || 24) - 1,
   });
 
   const onGameExit = () => state.transitionTo('claude');
@@ -298,11 +298,14 @@ async function main() {
   // 7. Hook events → state transitions.
   emitter.on('hook', (event: HookEventName) => {
     if (event === 'prompt_submit') {
+      state.setStatus('working');
       if (enabled) state.transitionTo('game');
-    } else if (event === 'stop' || event === 'notification') {
-      state.transitionTo('claude');
+    } else if (event === 'stop') {
+      state.setStatus('idle');
+    } else if (event === 'notification') {
+      state.setStatus('waiting-for-input');
     }
-    // subagent_stop is a no-op in v0
+    // subagent_stop is a no-op
   });
 
   // 7b. Control events → enable/disable game-mode.

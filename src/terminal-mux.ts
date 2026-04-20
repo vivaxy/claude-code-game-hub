@@ -1,19 +1,29 @@
 import type { IPty } from 'node-pty';
 import { StateMachine } from './state.js';
 import type { Game } from './games/index.js';
+import { Header } from './header.js';
 
 const CLEAR = '\x1b[2J\x1b[H';
 const HIDE_CURSOR = '\x1b[?25l';
 const SHOW_CURSOR = '\x1b[?25h';
+const setMargins = (rows: number): string => `\x1b[2;${rows}r`;
+const RESET_MARGINS = '\x1b[r';
 
 export class TerminalMux {
   private outputBuffer: string[] = [];
+  private header: Header;
 
   constructor(
     private pty: IPty,
     private state: StateMachine,
     private game: Game,
-  ) {}
+  ) {
+    this.header = new Header(
+      () => process.stdout.columns || 80,
+      () => this.state.status,
+      () => this.state.mode,
+    );
+  }
 
   setGame(newGame: Game): void {
     if (this.state.mode === 'game') {
@@ -58,10 +68,12 @@ export class TerminalMux {
     process.stdout.on('resize', () => {
       const cols = process.stdout.columns || 80;
       const rows = process.stdout.rows || 24;
-      this.pty.resize(cols, rows);
+      this.pty.resize(cols, rows - 1);
+      process.stdout.write(setMargins(rows));
       if (this.state.mode === 'game') {
-        this.game.resize(cols, rows);
+        this.game.resize(cols, rows - 1);
       }
+      this.updateHeader();
     });
 
     // Wire state transitions.
@@ -72,36 +84,53 @@ export class TerminalMux {
         this.enterClaudeMode();
       }
     });
+
+    this.state.on('status', () => this.updateHeader());
+    process.stdout.write(setMargins(process.stdout.rows || 24));
   }
 
   private enterGameMode(): void {
-    process.stdout.write(HIDE_CURSOR + CLEAR);
+    const rows = process.stdout.rows || 24;
+    process.stdout.write(HIDE_CURSOR + CLEAR + setMargins(rows));
     this.outputBuffer = [];
     this.game.resume();
+    this.updateHeader();
   }
 
   private enterClaudeMode(): void {
     this.game.pause();
-    // Clear game frame, restore cursor, force Claude to redraw.
-    process.stdout.write(SHOW_CURSOR + CLEAR);
-    // Flush any buffered Claude output so it has content to work with.
+    const cols = process.stdout.columns || 80;
+    const rows = process.stdout.rows || 24;
+    process.stdout.write(SHOW_CURSOR + CLEAR + setMargins(rows) + '\x1b[2;1H');
     if (this.outputBuffer.length > 0) {
       process.stdout.write(this.outputBuffer.join(''));
       this.outputBuffer = [];
     }
-    // Trigger a full redraw by sending a no-op resize.
-    const cols = process.stdout.columns || 80;
-    const rows = process.stdout.rows || 24;
-    this.pty.resize(cols + 1, rows);
-    this.pty.resize(cols, rows);
+    this.pty.resize(cols + 1, rows - 1);
+    this.pty.resize(cols, rows - 1);
+    this.updateHeader();
   }
 
   restoreTerminal(): void {
     try {
-      process.stdout.write(SHOW_CURSOR);
+      process.stdout.write(SHOW_CURSOR + RESET_MARGINS);
       process.stdin.setRawMode(false);
+      this.header.dispose();
     } catch {
       // best-effort cleanup
+    }
+  }
+
+  private updateHeader(): void {
+    if (this.state.mode !== 'game') {
+      this.header.stopFlashing();
+      return;
+    }
+    this.header.render();
+    if (this.state.status === 'waiting-for-input') {
+      this.header.startFlashing();
+    } else {
+      this.header.stopFlashing();
     }
   }
 }
