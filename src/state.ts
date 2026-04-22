@@ -3,6 +3,8 @@ import { EventEmitter } from 'node:events';
 export type Mode = 'claude' | 'game';
 export type ClaudeStatus = 'working' | 'waiting-for-input' | 'idle';
 
+export const STDIN_DRAIN_MS = 80;
+
 export class StateMachine extends EventEmitter {
   private _mode: Mode = 'claude';
   private _status: ClaudeStatus = 'idle';
@@ -26,7 +28,7 @@ export class StateMachine extends EventEmitter {
     if (this._mode === next) return;
     this._mode = next;
     // Discard any in-flight stdin bytes for 80ms after a mode switch.
-    this.drainUntil = Date.now() + 80;
+    this.drainUntil = Date.now() + STDIN_DRAIN_MS;
     this.emit('transition', next);
   }
 
