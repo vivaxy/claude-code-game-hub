@@ -15,10 +15,10 @@
 - Game-mode can be disabled at runtime via `/game-hub:disable`; re-enabled via `/game-hub:enable`. Disabled state is persisted across restarts.
 
 ### Status line
-- A single-line status indicator is displayed at the top of the screen while in game-mode (row 1, above the game frame).
+- A single-line status indicator is displayed on row 1 while in game-mode, above the game frame.
+- Row 1 is reserved for this indicator only while in game-mode; in claude-mode Claude Code uses the full terminal height.
 - Three states: `Claude: idle`, `Claude: working`, `Claude: waiting-for-input`.
 - When status is `waiting-for-input`, the status line color-flashes (alternating yellow/red) and displays `press q to return to Claude`.
-- The status line is not painted in claude-mode.
 
 ### Hook integration
 - Hooks POST events to `http://127.0.0.1:${GAME_HUB_PORT}/event`.

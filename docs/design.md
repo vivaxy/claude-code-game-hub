@@ -24,14 +24,16 @@ Implemented in `src/state.ts`. On each transition a 80 ms stdin drain window is 
 
 Claude status (`working` / `waiting-for-input` / `idle`) is tracked orthogonally to mode in `StateMachine.status`. It is updated by hook events and emits a `'status'` event, but never causes a mode transition.
 
-## Reserved Top Row
+## Reserved Top Row (game-mode only)
 
-Row 1 of the terminal is permanently reserved for the status line while game-hub is running.
+Row 1 is reserved for the status header **only while in game-mode**. In claude-mode, Claude owns the full terminal.
 
-- Claude's PTY is spawned (and resized) with `rows − 1` so its TUI never plans content for row 1.
-- A DEC scroll margin (`\x1b[2;{rows}r`) is applied so Claude's scrolling stays within rows 2..rows.
-- Games receive `rows − 1` via `resize()`. Snake's `offRow` is offset by `+1` to ensure content starts at row 2.
-- The margins are re-applied on every mode switch and terminal resize.
+- **Claude-mode (including boot):** Claude's PTY is sized to the full terminal `rows`; no DECSTBM margin is set. The hub emits no screen-modifying escapes on boot.
+- **Entering game-mode:** resize Claude's PTY to `rows − 1`, set DECSTBM `\x1b[2;{rows}r`, clear the screen, paint the header at row 1. Games receive `rows − 1` via `resize()`; Snake's `offRow` already offsets `+1` to start content at row 2.
+- **Returning to claude-mode:** reset DECSTBM (`\x1b[r`), resize Claude's PTY back to full `rows`, replay any buffered PTY output, then resize-bounce (`cols+1`/`cols`) to force a repaint.
+- **Terminal resize:** in claude-mode propagate full `rows` to the PTY with no margin write; in game-mode propagate `rows − 1` and re-apply margins.
+
+This sidesteps the xterm per-buffer DECSTBM behavior on the alt-screen: Claude runs unconstrained in the buffer it actually paints on.
 
 ## Claude Status Indicator
 

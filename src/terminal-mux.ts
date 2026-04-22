@@ -68,10 +68,12 @@ export class TerminalMux {
     process.stdout.on('resize', () => {
       const cols = process.stdout.columns || 80;
       const rows = process.stdout.rows || 24;
-      this.pty.resize(cols, rows - 1);
-      process.stdout.write(setMargins(rows));
       if (this.state.mode === 'game') {
+        this.pty.resize(cols, rows - 1);
+        process.stdout.write(setMargins(rows));
         this.game.resize(cols, rows - 1);
+      } else {
+        this.pty.resize(cols, rows);
       }
       this.updateHeader();
     });
@@ -86,13 +88,15 @@ export class TerminalMux {
     });
 
     this.state.on('status', () => this.updateHeader());
-    process.stdout.write(setMargins(process.stdout.rows || 24));
   }
 
   private enterGameMode(): void {
+    const cols = process.stdout.columns || 80;
     const rows = process.stdout.rows || 24;
+    this.pty.resize(cols, rows - 1);
     process.stdout.write(HIDE_CURSOR + CLEAR + setMargins(rows));
     this.outputBuffer = [];
+    this.game.resize(cols, rows - 1);
     this.game.resume();
     this.updateHeader();
   }
@@ -101,13 +105,14 @@ export class TerminalMux {
     this.game.pause();
     const cols = process.stdout.columns || 80;
     const rows = process.stdout.rows || 24;
-    process.stdout.write(SHOW_CURSOR + CLEAR + setMargins(rows) + '\x1b[2;1H');
+    process.stdout.write(SHOW_CURSOR + RESET_MARGINS + CLEAR);
+    this.pty.resize(cols, rows);
     if (this.outputBuffer.length > 0) {
       process.stdout.write(this.outputBuffer.join(''));
       this.outputBuffer = [];
     }
-    this.pty.resize(cols + 1, rows - 1);
-    this.pty.resize(cols, rows - 1);
+    this.pty.resize(cols + 1, rows);
+    this.pty.resize(cols, rows);
     this.updateHeader();
   }
 
