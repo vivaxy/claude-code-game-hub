@@ -157,7 +157,7 @@ export class Snake implements Game {
 
     // Title
     buf.push(at(oc, or), bold('  🐍 Snake — score: ' + this.score + '  best: ' + this.best + '  '));
-    buf.push(at(oc, or + 1), bold('  ↑↓←→ move  p pause  q back to claude  '));
+    buf.push(at(oc, or + 1), bold('  ↑↓←→ move  p pause  Ctrl+G back to claude  '));
 
     // Border top
     buf.push(at(oc, or + 2), '┌' + '─'.repeat(GRID_W * 2) + '┐');
@@ -181,7 +181,7 @@ export class Snake implements Game {
     const oc = this.offCol + GRID_W - 5;
     const or = this.offRow + 3 + Math.floor(GRID_H / 2);
     process.stdout.write(at(oc, or) + red(bold(' GAME OVER ')) + at(oc, or + 1) + '  score: ' + this.score + '  ');
-    process.stdout.write(at(oc, or + 2) + yellow('  press r to restart, q to return to Claude  '));
+    process.stdout.write(at(oc, or + 2) + yellow('  press r to restart, Ctrl+G to return to Claude  '));
   }
 
   private renderConfirm(): void {

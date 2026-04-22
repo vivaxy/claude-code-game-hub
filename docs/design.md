@@ -16,8 +16,8 @@ hook-server  →  emitter  →  state (StateMachine)  →  terminal-mux (Termina
 
 ```mermaid
 flowchart LR
-    claude([claude-mode]) -->|prompt_submit| game([game-mode])
-    game -->|q / Q| claude
+    claude([claude-mode]) -->|prompt_submit / Ctrl+G| game([game-mode])
+    game -->|Ctrl+G| claude
 ```
 
 Implemented in `src/state.ts`. On each transition a 80 ms stdin drain window is set (`drainUntil`) so in-flight keystrokes from the old mode are discarded.
@@ -50,7 +50,7 @@ The flash timer is torn down in `restoreTerminal()`.
 
 2. **Explicit input ownership per mode.** In `claude-mode`, stdin is piped to the PTY. In `game-mode`, stdin goes to the game's key handler; nothing reaches the PTY. On each mode switch, a brief 80 ms drain window discards in-flight bytes.
 
-3. **Hook events never cause game→claude transitions.** `Stop` and `Notification` hooks update `ClaudeStatus` only. `q`/`Q` is the sole user-driven path from game-mode to claude-mode; only subprocess self-exit triggers it programmatically.
+3. **Hook events never cause game→claude transitions.** `Stop` and `Notification` hooks update `ClaudeStatus` only. `Ctrl+G` is the sole user-driven toggle between modes; subprocess self-exit triggers claude-mode via `onGameExit`.
 
 ## Adding a New Game
 

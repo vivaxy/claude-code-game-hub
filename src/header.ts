@@ -28,7 +28,7 @@ export class Header {
     } else {
       // waiting-for-input
       colorCode = this.flashOn ? '\x1b[33;1m' : '\x1b[31;1m';
-      label = ' Claude: waiting-for-input  ·  press q to return to Claude ';
+      label = ' Claude: waiting-for-input  ·  press Ctrl+G to return to Claude ';
     }
 
     const padded = label.length < cols ? label + ' '.repeat(cols - label.length) : label;

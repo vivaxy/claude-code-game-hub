@@ -52,15 +52,17 @@ export class TerminalMux {
     process.stdin.on('data', (chunk: Buffer) => {
       if (this.state.isStdinDraining()) return;
 
+      // Ctrl+G (BEL, 0x07) toggles between claude-mode and game-mode in both directions.
+      // Single-byte guard prevents pasted content containing 0x07 from misfiring.
+      if (chunk.length === 1 && chunk[0] === 0x07) {
+        this.state.transitionTo(this.state.mode === 'claude' ? 'game' : 'claude');
+        return;
+      }
+
       if (this.state.mode === 'claude') {
         this.pty.write(chunk.toString());
       } else {
-        const key = chunk.toString();
-        if (key === 'q' || key === 'Q') {
-          this.state.transitionTo('claude');
-        } else {
-          this.game.handleInput(key);
-        }
+        this.game.handleInput(chunk.toString());
       }
     });
 

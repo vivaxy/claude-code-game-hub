@@ -7,7 +7,7 @@ See `docs/requirements.md` for what this project does and `docs/design.md` for a
 ## Workflow
 
 - Before writing code: update `docs/requirements.md` if behavior changes, `docs/design.md` if architecture changes.
-- After writing code: update or add tests covering the change. (No tests exist yet — when adding the first test, also add a `test` script to `package.json`.)
+- After writing code: update or add tests covering the change. Tests live in `test/` and run with `npm test` (vitest).
 
 ## Commands
 

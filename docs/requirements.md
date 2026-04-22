@@ -10,7 +10,7 @@
 - When a `UserPromptSubmit` hook fires → switch to game-mode (start/resume the game) and update Claude status to `working`.
 - When a `Stop` hook fires → update Claude status to `idle`. The game continues running.
 - When a `Notification` hook fires → update Claude status to `waiting-for-input`. The game continues running.
-- Game-mode exit: press `q`/`Q` while in-game to pause the game and return to Claude Code. The game state is preserved and resumes on the next prompt.
+- Game-mode toggle: press `Ctrl+G` to switch between game-mode and claude-mode in either direction. The game is paused on exit and resumed on re-entry; state is preserved.
 - At most one paused game exists at a time. Switching games (`/game-hub:switch`) discards the previously paused game.
 - Game-mode can be disabled at runtime via `/game-hub:disable`; re-enabled via `/game-hub:enable`. Disabled state is persisted across restarts.
 
@@ -18,7 +18,7 @@
 - A single-line status indicator is displayed on row 1 while in game-mode, above the game frame.
 - Row 1 is reserved for this indicator only while in game-mode; in claude-mode Claude Code uses the full terminal height.
 - Three states: `Claude: idle`, `Claude: working`, `Claude: waiting-for-input`.
-- When status is `waiting-for-input`, the status line color-flashes (alternating yellow/red) and displays `press q to return to Claude`.
+- When status is `waiting-for-input`, the status line color-flashes (alternating yellow/red) and displays `press Ctrl+G to return to Claude`.
 
 ### Hook integration
 - Hooks POST events to `http://127.0.0.1:${GAME_HUB_PORT}/event`.

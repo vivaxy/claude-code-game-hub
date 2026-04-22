@@ -232,6 +232,9 @@ async function main() {
   // 7. Hook events → state transitions.
   emitter.on('hook', (event: HookEventName) => {
     if (event === 'prompt_submit') {
+      // Also handles the case where user pressed Ctrl+G to peek at Claude and then submitted
+      // a new prompt — returns to game-mode, resuming the paused game. Gated by enabled so
+      // /game-hub:disable keeps working.
       state.setStatus('working');
       if (enabled) state.transitionTo('game');
     } else if (event === 'stop') {
