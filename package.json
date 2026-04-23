@@ -1,6 +1,6 @@
 {
   "name": "claude-code-game-hub",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Play games while Claude Code is working.",
   "type": "module",
   "bin": {
