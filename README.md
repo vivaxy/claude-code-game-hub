@@ -3,6 +3,8 @@
 A PTY wrapper for the `claude` CLI that plays a game while Claude is thinking.
 Press `Ctrl+G` any time to toggle between the game and Claude.
 
+![Demo](assets/demo.gif)
+
 ## Install
 
 ```bash

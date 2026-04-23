@@ -6,7 +6,7 @@
   "bin": {
     "game-hub": "./bin/game-hub.js"
   },
-  "files": ["bin/", "dist/", "scripts/"],
+  "files": ["bin/", "dist/", "scripts/postinstall.mjs", "scripts/preuninstall.mjs"],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
