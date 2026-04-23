@@ -130,14 +130,9 @@ export class TerminalMux {
 
   private updateHeader(): void {
     if (this.state.mode !== 'game') {
-      this.header.stopFlashing();
+      this.header.stopTimer();
       return;
     }
-    this.header.render();
-    if (this.state.status === 'waiting-for-input') {
-      this.header.startFlashing();
-    } else {
-      this.header.stopFlashing();
-    }
+    this.header.sync();
   }
 }

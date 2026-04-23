@@ -1,7 +1,12 @@
 import { ClaudeStatus } from './state.js';
 
+const WORKING_FRAMES = ['✢', '✳', '✶', '✻', '✽', '✻', '✶', '✳'];
+const WORKING_INTERVAL_MS = 120;
+const IDLE_INTERVAL_MS = 600;
+const WAITING_INTERVAL_MS = 500;
+
 export class Header {
-  private flashOn = true;
+  private frame = 0;
   private interval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
@@ -20,15 +25,17 @@ export class Header {
     let label: string;
 
     if (status === 'idle') {
-      colorCode = '\x1b[2m';
+      colorCode = this.frame % 2 === 0 ? '\x1b[32;1m' : '\x1b[32m';
       label = ' Claude: idle ';
     } else if (status === 'working') {
-      colorCode = '\x1b[36m';
-      label = ' Claude: working ';
+      const glyph = WORKING_FRAMES[this.frame % WORKING_FRAMES.length];
+      colorCode = '\x1b[36;1m';
+      label = ` Claude: ${glyph} working `;
     } else {
       // waiting-for-input
-      colorCode = this.flashOn ? '\x1b[33;1m' : '\x1b[31;1m';
-      label = ' Claude: waiting-for-input  ·  press Ctrl+G to return to Claude ';
+      const glyph = this.frame % 2 === 0 ? '⚠' : '‼';
+      colorCode = this.frame % 2 === 0 ? '\x1b[33;1m' : '\x1b[31;1m';
+      label = ` Claude: ${glyph} waiting-for-input  ·  press Ctrl+G to return to Claude `;
     }
 
     const padded = label.length < cols ? label + ' '.repeat(cols - label.length) : label;
@@ -44,27 +51,37 @@ export class Header {
     );
   }
 
-  startFlashing(): void {
-    if (this.interval !== null) return;
-    this.interval = setInterval(() => {
-      this.flashOn = !this.flashOn;
-      this.render();
-    }, 500);
-  }
-
-  stopFlashing(): void {
-    if (this.interval !== null) {
-      clearInterval(this.interval);
-      this.interval = null;
+  sync(): void {
+    const status = this.getStatus();
+    let intervalMs: number;
+    if (status === 'working') {
+      intervalMs = WORKING_INTERVAL_MS;
+    } else if (status === 'idle') {
+      intervalMs = IDLE_INTERVAL_MS;
+    } else {
+      intervalMs = WAITING_INTERVAL_MS;
     }
-    this.flashOn = true;
+    this.startTimer(intervalMs);
     this.render();
   }
 
-  dispose(): void {
+  stopTimer(): void {
     if (this.interval !== null) {
       clearInterval(this.interval);
       this.interval = null;
     }
+  }
+
+  dispose(): void {
+    this.stopTimer();
+  }
+
+  private startTimer(intervalMs: number): void {
+    this.stopTimer();
+    this.frame = 0;
+    this.interval = setInterval(() => {
+      this.frame++;
+      this.render();
+    }, intervalMs);
   }
 }

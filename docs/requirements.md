@@ -17,8 +17,10 @@
 ### Status line
 - A single-line status indicator is displayed on row 1 while in game-mode, above the game frame.
 - Row 1 is reserved for this indicator only while in game-mode; in claude-mode Claude Code uses the full terminal height.
-- Three states: `Claude: idle`, `Claude: working`, `Claude: waiting-for-input`.
-- When status is `waiting-for-input`, the status line color-flashes (alternating yellow/red) and displays `press Ctrl+G to return to Claude`.
+- Three animated states, each visually distinct:
+  - `idle` — pulsing bright-green label (bold ↔ normal, ~600 ms), signals Claude is ready.
+  - `working` — cycling star glyph (`✢ ✳ ✶ ✻ ✽`) prefixed to the label in bold cyan (~120 ms), signals active processing.
+  - `waiting-for-input` — color-flashing label (bold yellow ↔ bold red, 500 ms) with a glyph prefix; also displays `press Ctrl+G to return to Claude`.
 
 ### Hook integration
 - Hooks POST events to `http://127.0.0.1:${GAME_HUB_PORT}/event`.

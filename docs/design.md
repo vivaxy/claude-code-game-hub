@@ -37,12 +37,15 @@ This sidesteps the xterm per-buffer DECSTBM behavior on the alt-screen: Claude r
 
 ## Claude Status Indicator
 
-`src/header.ts` exports a `Header` class owned by `TerminalMux`. On each status change or mode switch, `TerminalMux.updateHeader()` is called:
+`src/header.ts` exports a `Header` class owned by `TerminalMux`. On each status change or mode switch, `TerminalMux.updateHeader()` calls `header.sync()` (game-mode) or `header.stopTimer()` (claude-mode).
 
-- In claude-mode: stops any flash timer; does not paint.
-- In game-mode: renders the current status on row 1; if status is `waiting-for-input`, starts a 500 ms flash timer alternating between yellow and red.
+`Header` maintains a single integer `frame` counter and one `setInterval` timer whose period is determined by the current status:
 
-The flash timer is torn down in `restoreTerminal()`.
+- `working` — 120 ms: advances `frame`, picks a star glyph from `WORKING_FRAMES[frame % 8]`, renders bold-cyan.
+- `idle` — 600 ms: advances `frame`, alternates bold-bright-green ↔ normal-green on even/odd `frame`.
+- `waiting-for-input` — 500 ms: advances `frame`, alternates bold-yellow ↔ bold-red with a glyph prefix; label also shows `press Ctrl+G to return to Claude`.
+
+`sync()` restarts the timer at the appropriate period whenever the status changes, then renders one frame immediately. The timer is torn down in `stopTimer()` (on entering claude-mode) and `dispose()` (on `restoreTerminal()`).
 
 ## Architecture Invariants
 
