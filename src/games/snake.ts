@@ -177,17 +177,29 @@ export class Snake implements Game {
     process.stdout.write(buf.join(''));
   }
 
+  private centerCol(visibleLen: number): number {
+    return this.offCol + Math.max(0, Math.floor((GRID_W * 2 + 2 - visibleLen) / 2));
+  }
+
   private renderDead(): void {
-    const oc = this.offCol + GRID_W - 5;
-    const or = this.offRow + 3 + Math.floor(GRID_H / 2);
-    process.stdout.write(at(oc, or) + red(bold(' GAME OVER ')) + at(oc, or + 1) + '  score: ' + this.score + '  ');
-    process.stdout.write(at(oc, or + 2) + yellow('  press r to restart, Ctrl+G to return to Claude  '));
+    const or = this.offRow + 4 + GRID_H;
+    const hint = 'press r to restart, Ctrl+G to return to Claude';
+    const scoreText = 'score: ' + this.score;
+    process.stdout.write(
+      at(this.centerCol(9), or) + '\x1b[2K' + red(bold('GAME OVER')) +
+      at(this.centerCol(scoreText.length), or + 1) + '\x1b[2K' + scoreText +
+      at(this.centerCol(hint.length), or + 2) + '\x1b[2K' + yellow(hint),
+    );
   }
 
   private renderConfirm(): void {
-    const oc = this.offCol + GRID_W - 5;
-    const or = this.offRow + 3 + Math.floor(GRID_H / 2);
-    process.stdout.write(at(oc, or) + red(bold(' GAME OVER ')) + at(oc, or + 1) + '  score: ' + this.score + '  ');
-    process.stdout.write(at(oc, or + 2) + bold(yellow('  Restart? (y/n)  ')));
+    const or = this.offRow + 4 + GRID_H;
+    const scoreText = 'score: ' + this.score;
+    const confirm = 'Restart? (y/n)';
+    process.stdout.write(
+      at(this.centerCol(9), or) + '\x1b[2K' + red(bold('GAME OVER')) +
+      at(this.centerCol(scoreText.length), or + 1) + '\x1b[2K' + scoreText +
+      at(this.centerCol(confirm.length), or + 2) + '\x1b[2K' + bold(yellow(confirm)),
+    );
   }
 }

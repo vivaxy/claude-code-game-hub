@@ -41,6 +41,7 @@
 - Confirm with `y`/`Y` to restart; any other key cancels and returns to the game-over screen.
 - A session-local best score is tracked and displayed in the title; it persists across restarts within the same hub process.
 - `r`/`R` during active play is ignored.
+- The game-over overlay (`GAME OVER`, `score:`, restart hint) and the `Restart? (y/n)` confirm prompt render below the grid's bottom border, each line horizontally centered within the grid's outer width. The overlay must not paint onto any grid cell or border row.
 
 ### Configuration
 - `GAME_HUB_PORT` (default `41731`) controls the HTTP hook server port.

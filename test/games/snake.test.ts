@@ -172,6 +172,27 @@ describe('Snake', () => {
       snake.handleInput('Y');
       expect(capturedOutput(writeSpy)).toContain('score: 0');
     });
+
+    it('renders GAME OVER overlay below the grid bottom border', () => {
+      // Compute offRow the same way Snake does (rows defaults to 24 when not a TTY).
+      const termRows = process.stdout.rows || 24;
+      const GRID_H_VAL = 16;
+      const offRow = 1 + Math.max(0, Math.floor((termRows - GRID_H_VAL - 4) / 2));
+      // Bottom border sits at 0-indexed row (offRow + 3 + GRID_H_VAL).
+      // In ANSI escapes rows are 1-indexed, so the border is at 1-idx = offRow + 4 + GRID_H_VAL.
+      // The overlay must start strictly below: 1-idx >= offRow + 5 + GRID_H_VAL.
+      const bottomBorder1Idx = offRow + 4 + GRID_H_VAL;
+
+      killSnake();
+      const output = capturedOutput(writeSpy);
+
+      // The at() escape immediately before \x1b[2K and the ANSI-colored 'GAME OVER' text
+      // has the form \x1b[<row>;<col>H\x1b[2K<ansi-codes>GAME OVER.
+      const m = /\x1b\[(\d+);\d+H\x1b\[2K(?:\x1b\[[\d;]*m)+GAME OVER/.exec(output);
+      expect(m).not.toBeNull();
+      const overlayRow1Idx = parseInt(m![1], 10);
+      expect(overlayRow1Idx).toBeGreaterThan(bottomBorder1Idx);
+    });
   });
 
   describe('best score', () => {
