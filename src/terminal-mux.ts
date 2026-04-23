@@ -11,6 +11,12 @@ const debugLog: ((msg: string) => void) | null = process.env['GAME_HUB_DEBUG']
     })()
   : null;
 
+// Matches raw BEL (legacy/tmux) and xterm modifyOtherKeys level-2 encoding (what Claude Code negotiates).
+function isCtrlG(buf: Buffer): boolean {
+  if (buf.length === 1 && buf[0] === 0x07) return true;
+  return buf.toString('binary') === '\x1b[27;5;103~';
+}
+
 const CLEAR = '\x1b[2J\x1b[H';
 const HIDE_CURSOR = '\x1b[?25l';
 const SHOW_CURSOR = '\x1b[?25h';
@@ -61,9 +67,8 @@ export class TerminalMux {
       debugLog?.(`[stdin] mode=${this.state.mode} len=${chunk.length} hex=${chunk.toString('hex')}`);
       if (this.state.isStdinDraining()) return;
 
-      // Ctrl+G (BEL, 0x07) toggles between claude-mode and game-mode in both directions.
-      // Single-byte guard prevents pasted content containing 0x07 from misfiring.
-      if (chunk.length === 1 && chunk[0] === 0x07) {
+      // Ctrl+G toggles between claude-mode and game-mode in both directions.
+      if (isCtrlG(chunk)) {
         this.state.transitionTo(this.state.mode === 'claude' ? 'game' : 'claude');
         return;
       }

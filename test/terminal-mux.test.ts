@@ -78,6 +78,21 @@ describe('TerminalMux', () => {
     expect(game.pauseCount).toBeGreaterThan(0);
   });
 
+  it('modifyOtherKeys encoding of Ctrl+G from claude-mode enters game-mode', () => {
+    expect(state.mode).toBe('claude');
+    emitStdin(Buffer.from('1b5b32373b353b3130337e', 'hex'));
+    expect(state.mode).toBe('game');
+    expect(game.resumeCount).toBe(1);
+  });
+
+  it('modifyOtherKeys encoding of Ctrl+G from game-mode returns to claude-mode', () => {
+    state.transitionTo('game');
+    vi.advanceTimersByTime(100);
+    emitStdin(Buffer.from('1b5b32373b353b3130337e', 'hex'));
+    expect(state.mode).toBe('claude');
+    expect(game.pauseCount).toBeGreaterThan(0);
+  });
+
   it('multi-byte chunk containing 0x07 does not toggle mode', () => {
     expect(state.mode).toBe('claude');
     emitStdin(Buffer.from([0x41, 0x07, 0x42])); // 'A' BEL 'B' — single-byte guard must block this
