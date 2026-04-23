@@ -19,6 +19,7 @@ node bin/game-hub.js   # run the hub (or: npm start)
 ```
 
 Set `GAME_HUB_PORT` (default `41731`) to change the hook server port.
+Set `GAME_HUB_DEBUG=1` to append raw stdin bytes and state transitions to `/tmp/game-hub-debug.log` for troubleshooting.
 
 ## Hook installation
 

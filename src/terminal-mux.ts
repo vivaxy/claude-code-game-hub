@@ -1,7 +1,15 @@
+import * as fs from 'node:fs';
 import type { IPty } from 'node-pty';
 import { StateMachine } from './state.js';
 import type { Game } from './games/index.js';
 import { Header } from './header.js';
+
+const debugLog: ((msg: string) => void) | null = process.env['GAME_HUB_DEBUG']
+  ? (() => {
+      const stream = fs.createWriteStream('/tmp/game-hub-debug.log', { flags: 'a' });
+      return (msg: string) => stream.write(msg + '\n');
+    })()
+  : null;
 
 const CLEAR = '\x1b[2J\x1b[H';
 const HIDE_CURSOR = '\x1b[?25l';
@@ -50,6 +58,7 @@ export class TerminalMux {
     process.stdin.setRawMode(true);
     process.stdin.resume();
     process.stdin.on('data', (chunk: Buffer) => {
+      debugLog?.(`[stdin] mode=${this.state.mode} len=${chunk.length} hex=${chunk.toString('hex')}`);
       if (this.state.isStdinDraining()) return;
 
       // Ctrl+G (BEL, 0x07) toggles between claude-mode and game-mode in both directions.
@@ -82,6 +91,7 @@ export class TerminalMux {
 
     // Wire state transitions.
     this.state.on('transition', (mode: string) => {
+      debugLog?.(`[transition] → ${mode}`);
       if (mode === 'game') {
         this.enterGameMode();
       } else {
@@ -89,7 +99,10 @@ export class TerminalMux {
       }
     });
 
-    this.state.on('status', () => this.updateHeader());
+    this.state.on('status', (s: string) => {
+      debugLog?.(`[status] → ${s}`);
+      this.updateHeader();
+    });
   }
 
   private enterGameMode(): void {
