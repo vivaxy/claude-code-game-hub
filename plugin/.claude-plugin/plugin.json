@@ -1,5 +1,5 @@
 {
   "name": "game-hub",
   "version": "0.1.0",
-  "description": "Signals game-hub to enter/leave game-mode via UserPromptSubmit / Stop / Notification"
+  "description": "Play games while Claude Code is working."
 }

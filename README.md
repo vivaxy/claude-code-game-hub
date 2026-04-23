@@ -1,6 +1,6 @@
 # claude-code-game-hub
 
-A PTY wrapper for the `claude` CLI that plays a game while Claude is thinking.
+Play games while Claude Code is working.
 Press `Ctrl+G` any time to toggle between the game and Claude.
 
 ![Demo](assets/demo.gif)
@@ -11,7 +11,7 @@ Press `Ctrl+G` any time to toggle between the game and Claude.
 npm install -g claude-code-game-hub
 ```
 
-This also registers the Claude plugin hooks. See [CLAUDE.md](./CLAUDE.md) for manual install, uninstall, and upgrade notes.
+This also registers the Claude plugin hooks.
 
 ## Usage
 
@@ -27,7 +27,20 @@ Once installed, just use `claude` normally. When you submit a prompt, game-mode 
 
 - `GAME_HUB_PORT` (default `41731`) — HTTP port for hook events.
 
-## Docs
+## Advanced install
 
-- [docs/requirements.md](./docs/requirements.md) — full feature list
-- [docs/design.md](./docs/design.md) — architecture
+Re-running `npm install -g claude-code-game-hub` refreshes the plugin to the latest GitHub HEAD (Claude Code restart required to apply). If `claude` wasn't on PATH at install time, or you installed without `-g`, register manually once:
+
+```
+claude plugin marketplace add vivaxy/claude-code-game-hub
+claude plugin install game-hub@claude-code-game-hub
+```
+
+To uninstall: `npm uninstall -g claude-code-game-hub` removes the plugin automatically. If you used a local (non-global) install, npm's preuninstall hook won't fire — run these manually:
+
+```
+claude plugin uninstall game-hub@claude-code-game-hub
+claude plugin marketplace remove claude-code-game-hub
+```
+
+The plugin registers `UserPromptSubmit`, `Stop`, and `Notification` hooks that POST to `http://127.0.0.1:${GAME_HUB_PORT:-41731}/event`. The hooks are no-ops when game-hub isn't running (`curl --connect-timeout 0.1`).
