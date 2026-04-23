@@ -6,7 +6,12 @@
   "bin": {
     "game-hub": "./bin/game-hub.js"
   },
-  "files": ["bin/", "dist/", "scripts/postinstall.mjs", "scripts/preuninstall.mjs"],
+  "files": [
+    "bin/",
+    "dist/",
+    "scripts/postinstall.mjs",
+    "scripts/preuninstall.mjs"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -20,11 +25,28 @@
     "node-pty": "^1.0.0"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^20.0.0",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "semantic-release": "^25.0.3",
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"
   },
   "engines": {
     "node": ">=20"
+  },
+  "license": "MIT",
+  "author": "vivaxy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vivaxy/claude-code-game-hub.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

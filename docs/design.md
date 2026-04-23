@@ -100,6 +100,10 @@ The uninstall command (`/game-hub:uninstall`) uses the `packageManager` stored i
 
 For games already on PATH (installed by any means), use `/game-hub:register <id> <command>` — the hub does not need to know how the binary was installed.
 
+## Release Process
+
+Releases are automated via `.github/workflows/release.yml`. On every push to `main`, semantic-release analyzes Conventional Commits since the last tag, computes the next version, publishes to npm via OIDC trusted publishing (no tokens), and pushes a `chore(release): vX.Y.Z [skip ci]` commit with an updated `CHANGELOG.md` and a matching git tag back to `main`.
+
 ## Key Files
 
 | File | Role |
